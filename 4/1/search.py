@@ -1,0 +1,232 @@
+# search.py
+# ---------
+# Licensing Information:  You are free to use or extend these projects for
+# educational purposes provided that (1) you do not distribute or publish
+# solutions, (2) you retain this notice, and (3) you provide clear
+# attribution to UC Berkeley, including a link to http://ai.berkeley.edu.
+# 
+# Attribution Information: The Pacman AI projects were developed at UC Berkeley.
+# The core projects and autograders were primarily created by John DeNero
+# (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
+# Student side autograding was added by Brad Miller, Nick Hay, and
+# Pieter Abbeel (pabbeel@cs.berkeley.edu).
+
+
+"""
+In search.py, you will implement generic search algorithms which are called by
+Pacman agents (in searchAgents.py).
+"""
+
+import util
+
+class SearchProblem:
+    """
+    This class outlines the structure of a search problem, but doesn't implement
+    any of the methods (in object-oriented terminology: an abstract class).
+
+    You do not need to change anything in this class, ever.
+    """
+
+    def getStartState(self):
+        """
+        Returns the start state for the search problem.
+        """
+        util.raiseNotDefined()
+
+    def isGoalState(self, state):
+        """
+          state: Search state
+
+        Returns True if and only if the state is a valid goal state.
+        """
+        util.raiseNotDefined()
+
+    def getSuccessors(self, state):
+        """
+          state: Search state
+
+        For a given state, this should return a list of triples, (successor,
+        action, stepCost), where 'successor' is a successor to the current
+        state, 'action' is the action required to get there, and 'stepCost' is
+        the incremental cost of expanding to that successor.
+        """
+        util.raiseNotDefined()
+
+    def getCostOfActions(self, actions):
+        """
+         actions: A list of actions to take
+
+        This method returns the total cost of a particular sequence of actions.
+        The sequence must be composed of legal moves.
+        """
+        util.raiseNotDefined()
+
+
+def tinyMazeSearch(problem):
+    """
+    Returns a sequence of moves that solves tinyMaze.  For any other maze, the
+    sequence of moves will be incorrect, so only use this for tinyMaze.
+    """
+    from game import Directions
+    s = Directions.SOUTH
+    w = Directions.WEST
+    return  [s, s, w, s, w, w, s, w]
+
+def depthFirstSearch(problem):
+    """
+    Search the deepest nodes in the search tree first.
+
+    Your search algorithm needs to return a list of actions that reaches the
+    goal. Make sure to implement a graph search algorithm.
+
+    To get started, you might want to try some of these simple commands to
+    understand the search problem that is being passed in:
+
+    print "Start:", problem.getStartState()
+    print "Is the start a goal?", problem.isGoalState(problem.getStartState())
+    print "Start's successors:", problem.getSuccessors(problem.getStartState())
+    """
+    "*** YOUR CODE HERE ***"
+
+    # print "Start:", problem.getStartState()
+    # print "Is the start a goal?", problem.isGoalState(problem.getStartState())
+    # print "Start's successors:", problem.getSuccessors(problem.getStartState())[0][0]
+
+    #visited nodes list
+    visited = []
+    init_state = problem.getStartState()
+    #using stack from DFS because of LIFO 
+    graph = util.Stack()
+    #push (node, path) into stack
+    graph.push((init_state,[]))
+    #continue till stack not empty
+    while not graph.isEmpty():
+        curr_state, actions =  graph.pop()
+        #check if node already visited
+        if curr_state not in visited:
+            visited.append(curr_state)
+            #check for goal
+            if problem.isGoalState(curr_state):
+                return actions
+            else:
+                #find next_states
+                next_states = problem.getSuccessors(curr_state)
+                for state in next_states:
+                    #push (node,path)
+                    graph.push((state[0],actions+[state[1]]))
+    return actions
+
+
+def breadthFirstSearch(problem):
+    """Search the shallowest nodes in the search tree first."""
+    "*** YOUR CODE HERE ***"
+   #visited nodes list
+    visited = []
+    init_state = problem.getStartState()
+    #using queue from BFS because of FIFO
+    graph = util.Queue()
+    #push (node, path) into stack
+    graph.push((init_state,[]))
+    #continue till stack not empty
+    while not graph.isEmpty():
+        curr_state, actions =  graph.pop()
+        #check if node already visited
+        if curr_state not in visited:
+            visited.append(curr_state)
+            #check for goal
+            if problem.isGoalState(curr_state):
+                return actions
+            else:
+                #find next_states
+                next_states = problem.getSuccessors(curr_state)
+                for state in next_states:
+                    #push (node,path)
+                    graph.push((state[0],actions+[state[1]]))
+    return actions
+
+def uniformCostSearch(problem):
+    """Search the node of least total cost first."""
+    "*** YOUR CODE HERE ***"
+    # visited nodes list
+    visited = []
+    # using priority queue for UCS 
+    open = util.PriorityQueue()
+    # initial parameters
+    init_state = problem.getStartState()
+    init_actions = []
+    init_path_cost = 0
+    init_node = (init_state,init_actions,init_path_cost) # tuple containing all init parameters
+    # push init_node into open along with the init_path_cost (priority)
+    open.push(init_node, init_path_cost)
+    # continue till open not empty
+    while not open.isEmpty():
+        curr_state, actions, path_cost =  open.pop()
+        # check if curr_state already visited
+        if curr_state not in visited:
+            visited.append(curr_state)
+            # check for goal state
+            if problem.isGoalState(curr_state):
+                return actions
+            else:
+                # get successors
+                successors = problem.getSuccessors(curr_state)
+                for successor in successors:
+                    # create next_node and push in open
+                    next_state, next_action, edge_cost = successor
+                    next_node = (next_state,actions+[next_action],path_cost+edge_cost)
+                    open.push(next_node, path_cost + edge_cost)
+    return actions
+
+def nullHeuristic(state, problem=None):
+    """
+    A heuristic function estimates the cost from the current state to the nearest
+    goal in the provided SearchProblem.  This heuristic is trivial.
+    """
+    return 0
+
+def aStarSearch(problem, heuristic=nullHeuristic):
+    """Search the node that has the lowest combined cost and heuristic first."""
+    "*** YOUR CODE HERE ***"
+    # visited nodes list
+    visited = {}
+    # using priority queue for A*
+    open = util.PriorityQueue()
+    # initial parameters
+    init_state = problem.getStartState()
+    init_actions = []
+    init_path_cost = 0
+    init_node = (init_state,init_actions,init_path_cost) # tuple containing all init parameters
+    # push init_node into open along with the init_path_cost (priority)
+    open.push(init_node, init_path_cost)
+    # continue till open not empty
+    while not open.isEmpty():
+        curr_state, actions, path_cost =  open.pop()
+        # update visited with curr_state and cost
+        visited[curr_state] = path_cost
+        # check for goal state
+        if problem.isGoalState(curr_state):
+            return actions
+        else:
+            # get successors
+            successors = problem.getSuccessors(curr_state)
+            for successor in successors:
+                # create next_node and push in open
+                next_state, next_action, edge_cost = successor
+                new_actions = actions + [next_action]
+                new_path_cost = problem.getCostOfActions(new_actions)
+                # check if the next_state lies in visited and new_path_cost is lower, then updated the actions
+                update = True
+                if next_state in list(visited.keys()) and new_path_cost >= visited[next_state]:
+                    update = False
+                if update:
+                    next_node = (next_state,new_actions,new_path_cost)
+                    open.update(next_node, new_path_cost + heuristic(next_state,problem))
+                    visited[next_state] = new_path_cost
+    return actions
+
+
+# Abbreviations
+bfs = breadthFirstSearch
+dfs = depthFirstSearch
+astar = aStarSearch
+ucs = uniformCostSearch
